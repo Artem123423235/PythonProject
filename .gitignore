@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled, caches, logs
+*.log
+.DS_Store
+.ipynb_checkpoints
+
+# Packaging / dist
+build/
+dist/
+*.egg-info/
+
+# IDEs
+.vscode/
+.idea/
