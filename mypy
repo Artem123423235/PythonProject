@@ -1,0 +1,18 @@
+# mypy.ini
+[mypy]
+python_version = 3.10
+
+# Требуем аннотаций для всех определений функций
+disallow_untyped_defs = True
+
+# Предупреждение, если возвращаем Any
+warn_return_any = True
+
+# Не падать на внешние пакеты без stubs
+ignore_missing_imports = True
+
+# Исключаем виртуальные окружения/папки от анализа
+exclude = (?x)^(venv/|\.venv/|env/|build/|dist/)
+
+# При необходимости можно указать директории, которые проверять:
+# files = src,tests
