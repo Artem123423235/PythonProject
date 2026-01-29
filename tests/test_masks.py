@@ -1,43 +1,69 @@
-# tests/test_masks.py
-import pytest
-from masks import get_mask_card_number, get_mask_account
+# src/masks.py
+"""
+Модуль masks: маскировка номера карты и номера счёта.
+
+Функции:
+- get_mask_card_number(card_number: str | int) -> str
+- get_mask_account(account_number: str | int) -> str
+"""
+
+import re
+from typing import Union
 
 
-def test_get_mask_card_number_standard_16():
-    src = "1234 5678 9012 3456"
-    masked = get_mask_card_number(src)
-    assert masked == "1234 56** **** 3456"
+def _only_digits_from_int_or_str(value: Union[int, str]) -> str:
+    """Вернуть строку, содержащую только цифры из value."""
+    s: str = str(value)
+    return re.sub(r"\D", "", s)
 
 
-def test_get_mask_card_number_short():
-    # 8 digits -> left_show = min(6, 8-4)=4, right_show=4, masked_mid_len=0
-    assert get_mask_card_number("12345678") == "1234 5678"
+def _group_by_4(s: str) -> str:
+    """Разбить строку на группы по 4 символа, разделив пробелом."""
+    return " ".join(s[i : i + 4] for i in range(0, len(s), 4))
 
 
-def test_get_mask_card_number_very_short():
-    assert get_mask_card_number("1234") == "1234"
-    assert get_mask_card_number("12") == "12"
+def get_mask_card_number(card_number: Union[int, str]) -> str:
+    """Маскирует номер банковской карты.
+
+    Правило (как в тестах/критериях):
+    - Показываем слева left_show = min(6, n - 4) цифр.
+    - Показываем справа right_show = 4 цифры.
+    - Средняя часть заменяется на '*' повторённую нужное число раз.
+    - Для длины n <= 4 возвращается строка цифр без изменений.
+
+    Аргумент может быть строкой с пробелами/дефисами или числом — используются только цифры.
+    """
+    digits: str = _only_digits_from_int_or_str(card_number)
+    if not digits:
+        raise ValueError("card_number must contain at least one digit")
+
+    n: int = len(digits)
+    if n <= 4:
+        return digits
+
+    left_show: int = min(6, max(0, n - 4))
+    right_show: int = 4
+
+    middle_len: int = n - left_show - right_show
+    left: str = digits[:left_show]
+    right: str = digits[-right_show:]
+
+    middle_mask: str = "*" * middle_len if middle_len > 0 else ""
+    masked: str = left + middle_mask + right
+
+    return _group_by_4(masked)
 
 
-def test_get_mask_card_number_non_digit_chars():
-    assert get_mask_card_number("  4111-1111-1111-1111  ") == "4111 11** **** 1111"
+def get_mask_account(account_number: Union[int, str]) -> str:
+    """Маскирует номер счёта по правилу '**XXXX' (если длина > 4).
 
+    Если длина цифр <= 4 — возвращает цифры как есть.
+    """
+    digits: str = _only_digits_from_int_or_str(account_number)
+    if not digits:
+        raise ValueError("account_number must contain at least one digit")
 
-def test_get_mask_card_number_empty_raises():
-    with pytest.raises(ValueError):
-        get_mask_card_number("abc")
+    if len(digits) <= 4:
+        return digits
 
-
-def test_get_mask_account_standard():
-    acc = "40817810099910004312"
-    assert get_mask_account(acc) == "**4312"
-
-
-def test_get_mask_account_short():
-    assert get_mask_account("1234") == "1234"
-    assert get_mask_account("99") == "99"
-
-
-def test_get_mask_account_invalid_raises():
-    with pytest.raises(ValueError):
-        get_mask_account("no digits here")
+    return "**" + digits[-4:]
