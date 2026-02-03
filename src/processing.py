@@ -20,3 +20,6 @@ def sort_by_date(data, descending=True):
     :return: Новый отсортированный список
     """
     return sorted(data, key=lambda x: x['date'], reverse=descending)
+
+def divide(a, b):
+    return a / b

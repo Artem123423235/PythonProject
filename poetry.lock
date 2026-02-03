@@ -74,6 +74,17 @@ files = [
 markers = {lint = "platform_system == \"Windows\"", test = "sys_platform == \"win32\""}
 
 [[package]]
+name = "divide"
+version = "6"
+description = "UNKNOWN"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "divide-6.tar.gz", hash = "sha256:e666196326d99199cd903d9f1bcd82f6b7c5dd3aa657a063a034d28323d79e84"},
+]
+
+[[package]]
 name = "flake8"
 version = "6.1.0"
 description = "the modular source code checker: pep8 pyflakes and co"
@@ -406,4 +417,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.14"
-content-hash = "78c5531ed92c4adc3614786a30e2001a7f4a549bcd1e573c05d52046e5b0cc60"
+content-hash = "bcd5f858f7e4fbca4b4ded0afb12fd45f03c0d4135f876eeceb36f3810a83cb4"
