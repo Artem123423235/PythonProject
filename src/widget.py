@@ -87,45 +87,40 @@ _mask_account_number: Callable[[str], str] = (
 )
 
 
-def mask_account_card(text: str) -> str:
-    """
-    Маскирует номер карты или счета в строке.
+def get_mask_account_card(account_number):
+    """Функция для маскирования номера счета."""
+    if not isinstance(account_number, str):
+        return "Некорректные данные: должен быть строковый тип"
 
-    Аргумент:
-        text: строка вида "Visa Platinum 7000792289606361" или
-              "Счет 73654108430135874305".
+    # Удаляем пробелы и дефисы из строки
+    account_number = account_number.replace(" ", "").replace("-", "")
 
-    Возвращает:
-        Строку с замаскированным номером.
-    """
-    if not isinstance(text, str):
-        raise TypeError("text must be a string")
+    if len(account_number) < 4:
+        return "Номер счета слишком короткий"
 
-    parts = text.rsplit(" ", 1)
-    if len(parts) == 1:
-        return text
-
-    name, number = parts
-    if name.strip().lower().startswith("счет"):
-        masked = _mask_account_number(number)
-    else:
-        masked = _mask_card_number(number)
-
-    return f"{name} {masked}"
+    # Маскируем все, кроме последних 4 символов
+    return '*' * (len(account_number) - 4) + account_number[-4:]
 
 
-def get_date(iso_str: str) -> str:
-    """
-    Преобразует строку-дату из ISO-формата
-    ("2024-03-11T02:26:18.671407") в формат "ДД.MM.ГГГГ".
+def get_date(date_str):
+    """Преобразует строку даты в объект datetime."""
+    if not date_str:
+        return "Строка даты отсутствует"
 
-    Бросает ValueError при неверном формате.
-    """
-    if not isinstance(iso_str, str):
-        raise TypeError("iso_str must be a string")
+    # Попробуем разные форматы
+    formats = [
+        "%Y-%m-%d",  # 2023-10-25
+        "%d-%m-%Y",  # 25-10-2023
+        "%m/%d/%Y",  # 10/25/2023
+        "%Y/%m/%d",  # 2023/10/25
+        "%d %B %Y",  # 25 October 2023
+        "%B %d, %Y"  # October 25, 2023
+    ]
 
-    dt = datetime.fromisoformat(iso_str)
-    return dt.strftime("%d.%m.%Y")
+    for fmt in formats:
+        try:
+            return datetime.strptime(date_str, fmt)
+        except ValueError:
+            continue
 
-
-__all__ = ["mask_account_card", "get_date"]
+    return "Некорректный формат даты"

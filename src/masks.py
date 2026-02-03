@@ -61,3 +61,5 @@ def get_mask_account(account_number: str) -> str:
         return digits
 
     return "**" + digits[-4:]
+
+
