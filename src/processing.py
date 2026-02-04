@@ -2,26 +2,20 @@ def divide(a, b):
     return a / b
 
 
-def filter_by_state(items, state):
-    """Фильтрует список словарей по заданному статусу."""
-    if not isinstance(items, list):
-        raise ValueError("Входные данные должны быть списком")
-
-    return [item for item in items if item.get('state') == state]
-
+from datetime import datetime
 
 def sort_by_date(items, reverse=False):
+    """Сортирует список словарей по дате."""
     if not isinstance(items, list):
         raise ValueError("Входные данные должны быть списком")
 
-    # Определяем форматы данных для сопоставления
     date_formats = [
-        "%Y-%m-%d",  # Год-месяц-день
-        "%d-%m-%Y",  # День-месяц-год
-        "%m/%d/%Y",  # Месяц/день/год
-        "%Y/%m/%d",  # Год/месяц/день
-        "%d %B %Y",  # День Месяц Год
-        "%B %d, %Y"  # Месяц День, Год
+        "%Y-%m-%d",
+        "%d-%m-%Y",
+        "%m/%d/%Y",
+        "%Y/%m/%d",
+        "%d %B %Y",
+        "%B %d, %Y"
     ]
 
     for item in items:
@@ -29,7 +23,6 @@ def sort_by_date(items, reverse=False):
         if not date_str:
             raise ValueError("Отсутствует дата в одном из словарей")
 
-        # Попытка преобразовать дату с помощью всех форматов
         for fmt in date_formats:
             try:
                 item['parsed_date'] = datetime.strptime(date_str, fmt)
@@ -39,5 +32,12 @@ def sort_by_date(items, reverse=False):
         else:
             raise ValueError(f"Некорректный формат даты: {date_str}")
 
-    # Сортируем по проверенной дате
     return sorted(items, key=lambda x: x['parsed_date'], reverse=reverse)
+
+
+def filter_by_state(items, state):
+    """Фильтрует список словарей по заданному статусу."""
+    if not isinstance(items, list):
+        raise ValueError("Входные данные должны быть списком")
+
+    return [item for item in items if item.get('state') == state]
