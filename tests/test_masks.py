@@ -1,25 +1,28 @@
-import pytest
-from src.masks import mask_account_card, get_mask_account
-
-@pytest.mark.parametrize("card, expected", [
-    ("1234 5678 9012 3456", "************3456"),
-    ("1234-5678-9012-3456", "************3456"),
-    ("1234567890123456", "************3456"),
-    ("1234", "1234"),
-    ("1234567890", "******7890"),
-    (None, "Некорректные данные"),
-])
-def test_mask_account_card(card, expected):
-    assert mask_account_card(card) == expected
+from src.masks import get_mask_account, get_mask_card_number
 
 
-@pytest.mark.parametrize("account, expected", [
-    ("1234567890", "******7890"),
-    ("1234", "1234"),
-    (None, "Некорректные данные: должен быть строковый тип"),
-])
-def test_get_mask_account(account, expected):
-    assert get_mask_account(account) == expected
+def test_card_standard():
+    assert get_mask_card_number("1111222233334444") == "111122******4444"
 
+
+def test_card_with_spaces():
+    assert get_mask_card_number("1111 2222 3333 4444") == "111122******4444"
+
+
+def test_card_short():
+    assert get_mask_card_number("12345678") == "****5678"
+
+
+def test_card_no_digits():
+    assert get_mask_card_number("no digits") == ""
+
+
+def test_account_long():
+    masked = "*" * 16 + "4312"
+    assert get_mask_account("40817810099910004312") == masked
+
+
+def test_account_short():
+    assert get_mask_account("123") == "123"
 
 

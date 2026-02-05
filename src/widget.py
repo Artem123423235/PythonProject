@@ -7,120 +7,84 @@ Widget utilities.
 - get_date(iso_str): преобразует ISO-дату -> "ДД.ММ.ГГГГ".
 """
 
-from datetime import datetime
-from typing import Callable, Optional
 import re
+from datetime import datetime
 
-_external_mask_card: Optional[Callable[[str], str]] = None
-_external_mask_account: Optional[Callable[[str], str]] = None
-
-# Попытка переиспользовать внешние реализации, если они есть.
-# Импорт выполняем в try/except, чтобы не ломать модуль при отсутствии этих библиотек.
-try:
-    # ожидание имен функций: mask_card_number, mask_account_number
-    from masking import mask_card_number as _external_mask_card  # type: ignore
-except Exception:
-    _external_mask_card = None
-
-if _external_mask_card is None:
-    try:
-        from utils import mask_card_number as _external_mask_card  # type: ignore
-    except Exception:
-        _external_mask_card = None
-
-try:
-    from masking import mask_account_number as _external_mask_account  # type: ignore
-except Exception:
-    _external_mask_account = None
-
-if _external_mask_account is None:
-    try:
-        from utils import mask_account_number as _external_mask_account  # type: ignore
-    except Exception:
-        _external_mask_account = None
+from src.masks import get_mask_account, get_mask_card_number
 
 
-def _mask_card_number_default(number: str) -> str:
+def _all_digits(text: str) -> str:
+    """Return concatenated digits from text."""
+    if not text:
+        return ""
+    return "".join(re.findall(r"\d", text))
+
+
+def mask_account_card(text: str) -> str:
     """
-    Базовая маскировка для карт.
+    Replace digits in text with masked digits according to card/account rules.
 
-    Пример поведения для 16-значной карты:
-    7000792289606361 -> 7000 79** **** 6361
-
-    Для других длин: показываем первые 4 и последние 4, середину заменяем '*'
-    и группируем по 4 символа для читаемости.
+    Decision rule:
+    - If total digits == 20 -> treat as account (mask all but last 4).
+    - Else if total digits >= 13 -> treat as card (keep first 6 and last 4).
+    - Otherwise -> treat as account.
     """
-    digits = re.sub(r"\D", "", number)
+    if not text:
+        return text
+
+    digits = _all_digits(text)
     if not digits:
-        return number
+        return text
 
-    if len(digits) == 16:
-        return f"{digits[:4]} {digits[4:6]}** **** {digits[-4:]}"
+    # Changed decision: 20-digit strings are accounts (common for bank accounts)
+    if len(digits) == 20:
+        masked = get_mask_account(digits)
+    elif len(digits) >= 13:
+        masked = get_mask_card_number(digits)
+    else:
+        masked = get_mask_account(digits)
 
-    if len(digits) <= 8:
-        return digits[:4] + "*" * max(0, len(digits) - 4)
+    result = []
+    it = iter(masked)
+    for ch in text:
+        if ch.isdigit():
+            try:
+                result.append(next(it))
+            except StopIteration:
+                result.append("*")
+        else:
+            result.append(ch)
 
-    first = digits[:4]
-    last = digits[-4:]
-    middle_len = len(digits) - 8
-    middle = "*" * middle_len
-    groups = [middle[i : i + 4] for i in range(0, len(middle), 4)]
-    return " ".join([first] + groups + [last])
+    remaining = "".join(it)
+    if remaining:
+        result.append(remaining)
+
+    return "".join(result)
 
 
-def _mask_account_number_default(number: str) -> str:
+def get_date(date_str: str) -> str:
     """
-    Базовая маскировка для счетов: показываем только последние 4 цифры.
-    Пример: 73654108430135874305 -> **4305
+    Normalize date to DD.MM.YYYY format.
+
+    Accepts:
+    - 'YYYY-MM-DD' or 'YYYY-MM-DD...' (ISO at start)
+    - 'DD.MM.YYYY' (already correct)
+    If input empty/None -> return empty string.
+    Otherwise return stripped input if not recognized.
     """
-    digits = re.sub(r"\D", "", number)
-    if not digits:
-        return number
-    return f"**{digits[-4:]}"
-
-
-_mask_card_number: Callable[[str], str] = (
-    _external_mask_card or _mask_card_number_default
-)
-_mask_account_number: Callable[[str], str] = (
-    _external_mask_account or _mask_account_number_default
-)
-
-
-def get_mask_account_card(account_number):
-    """Функция для маскирования номера счета."""
-    if not isinstance(account_number, str):
-        return "Некорректные данные: должен быть строковый тип"
-
-    # Удаляем пробелы и дефисы из строки
-    account_number = account_number.replace(" ", "").replace("-", "")
-
-    if len(account_number) < 4:
-        return "Номер счета слишком короткий"
-
-    # Маскируем все, кроме последних 4 символов
-    return '*' * (len(account_number) - 4) + account_number[-4:]
-
-
-def get_date(date_str):
-    """Преобразует строку даты в объект datetime."""
     if not date_str:
-        return "Строка даты отсутствует"
+        return ""
 
-    # Попробуем разные форматы
-    formats = [
-        "%Y-%m-%d",  # 2023-10-25
-        "%d-%m-%Y",  # 25-10-2023
-        "%m/%d/%Y",  # 10/25/2023
-        "%Y/%m/%d",  # 2023/10/25
-        "%d %B %Y",  # 25 October 2023
-        "%B %d, %Y"  # October 25, 2023
-    ]
+    s = date_str.strip()
+    if re.match(r"^\d{2}\.\d{2}\.\d{4}$", s):
+        return s
 
-    for fmt in formats:
+    m = re.match(r"^(\d{4}-\d{2}-\d{2})", s)
+    if m:
         try:
-            return datetime.strptime(date_str, fmt)
+            dt = datetime.strptime(m.group(1), "%Y-%m-%d")
+            return dt.strftime("%d.%m.%Y")
         except ValueError:
-            continue
+            return s
 
-    return "Некорректный формат даты"
+    return s

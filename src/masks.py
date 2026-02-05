@@ -1,32 +1,42 @@
 # src/masks.py
-"""
-Модуль masks: функции маскировки номера банковской карты и банковского счёта.
-"""
+import re
 
 
-def get_mask_account(account_number):
-    """Маскирует номер счета."""
-    if not isinstance(account_number, str):
-        return "Некорректные данные: должен быть строковый тип"
-
-    account_number = account_number.replace(" ", "").replace("-", "")
-
-    if len(account_number) < 4:
-        return "Номер счета слишком короткий"
-
-    return '*' * (len(account_number) - 4) + account_number[-4:]
+def _digits(text: str) -> str:
+    """Return only digit characters from text."""
+    if not text:
+        return ""
+    return "".join(re.findall(r"\d", text))
 
 
-def mask_account_card(card_number):
-    """Маскирует номер карточки."""
-    if not isinstance(card_number, str):
-        return "Некорректные данные"
+def get_mask_card_number(card_str: str) -> str:
+    """
+    Mask card number: keep first 6 and last 4 digits if length >= 10.
+    If length < 10 and > 4: mask all but last 4.
+    If length <= 4 or no digits: return digits or empty string.
+    """
+    digits = _digits(card_str)
+    n = len(digits)
+    if n == 0:
+        return ""
+    if n <= 4:
+        return digits
+    if n < 10:
+        return "*" * (n - 4) + digits[-4:]
+    return digits[:6] + "*" * (n - 10) + digits[-4:]
 
-    card_number = card_number.replace(" ", "").replace("-", "")
 
-    if len(card_number) < 4:
-        return "Некорректные данные"
-
-    return '*' * (len(card_number) - 4) + card_number[-4:]
+def get_mask_account(account_str: str) -> str:
+    """
+    Mask account number: keep last 4 digits, mask the rest.
+    If length <= 4: return digits unchanged.
+    """
+    digits = _digits(account_str)
+    n = len(digits)
+    if n == 0:
+        return ""
+    if n <= 4:
+        return digits
+    return "*" * (n - 4) + digits[-4:]
 
 
