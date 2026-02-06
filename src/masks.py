@@ -38,5 +38,3 @@ def get_mask_account(account_str: str) -> str:
     if n <= 4:
         return digits
     return "*" * (n - 4) + digits[-4:]
-
-

@@ -1,10 +1,10 @@
-def divide(a, b):
-    return a / b
-
-
 import re
 from datetime import datetime
 from typing import Dict, List, Optional
+
+
+def divide(a, b):
+    return a / b
 
 
 def _parse_date_for_sort(value: Optional[str]) -> Optional[datetime]:
@@ -42,6 +42,7 @@ def sort_by_date(items: List[Dict], descending: bool = True) -> List[Dict]:
     Sort items by parsed 'date' key. Items with missing/unparsed dates
     are considered minimal (come last when descending).
     """
+
     def key_fn(it: Dict) -> datetime:
         dt = _parse_date_for_sort(it.get("date") if isinstance(it, dict) else None)
         return dt if dt is not None else datetime.min

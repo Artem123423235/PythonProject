@@ -3,8 +3,11 @@
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 import math
+
+
 def calculate_logarithm(x, base):
     return math.log(x, base)
+
 
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
@@ -28,8 +31,9 @@ def is_even(a):
 
 def find_max(my_list):
     if len(my_list) > 0:
-       return max(my_list)
+        return max(my_list)
     return 0
+
 
 if __name__ != '__main__':
     pass
@@ -47,5 +51,3 @@ else:
         if b > 0:
             return a / b
         return 0
-
-
