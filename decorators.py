@@ -4,6 +4,14 @@ from typing import Optional, Callable, Any
 
 
 def log(filename: Optional[str] = None) -> Callable:
+    """Декоратор для логирования успешного выполнения и ошибок функций.
+
+    Args:
+        filename (Optional[str]): Имя файла, в который будут записываться логи.
+
+    Returns:
+        Callable: Обернутая функция с логированием.
+    """
     logging.basicConfig(
         filename=filename,
         level=logging.INFO,
