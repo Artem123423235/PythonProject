@@ -1,7 +1,19 @@
-# This is a sample Python script.
+from PythonProject.decorators import log
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+@log(filename="mylog.txt")
+def my_function(x: int, y: int) -> int:
+    return x + y
+
+my_function(1, 2)
+
+@log()
+def my_function_with_error(x: int, y: int) -> int:
+    return x / y
+
+try:
+    my_function_with_error(1, 0)
+except ZeroDivisionError:
+    pass
 
 
 def print_hi(name):
@@ -14,3 +26,6 @@ if __name__ == '__main__':
     print_hi('PyCharm')
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+
+# main.py
