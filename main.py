@@ -1,14 +1,18 @@
 from PythonProject.decorators import log
 
+
 @log(filename="mylog.txt")
 def my_function(x: int, y: int) -> int:
     return x + y
 
+
 my_function(1, 2)
+
 
 @log()
 def my_function_with_error(x: int, y: int) -> int:
     return x / y
+
 
 try:
     my_function_with_error(1, 0)

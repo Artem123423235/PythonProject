@@ -1,7 +1,40 @@
 import pytest
+from copy import deepcopy
+
+import src.processing as processing
+from src.processing import filter_by_state, sort_by_date
+
+import pytest
 from datetime import datetime
 
 from src.widget import mask_account_card, get_date
+
+
+def test_filter_by_state_defaults_and_missing_key():
+    data = [
+        {"id": 1, "state": "EXECUTED"},
+        {"id": 2, "state": "PENDING"},
+        {"id": 3},  # нет 'state'
+        {"id": 4, "state": "EXECUTED"},
+        {"id": 5, "state": None},
+    ]
+    orig = deepcopy(data)
+    res = filter_by_state(data)  # по умолчанию 'EXECUTED'
+    assert res == [{"id": 1, "state": "EXECUTED"}, {"id": 4, "state": "EXECUTED"}]
+    # убедимся, что исходный список не изменился
+    assert data == orig
+
+
+def test_filter_by_state_custom_value_and_empty():
+    data = [
+        {"id": 1, "state": "CANCELLED"},
+        {"id": 2, "state": "EXECUTED"},
+        {"id": 3, "state": "CANCELLED"},
+    ]
+    res = filter_by_state(data, state="CANCELLED")
+    assert res == [{"id": 1, "state": "CANCELLED"}, {"id": 3, "state": "CANCELLED"}]
+
+    assert filter_by_state([]) == []  # пустой список возвращается как есть
 
 
 def test_mask_card_number_default_16_digits():
