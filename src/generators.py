@@ -1,4 +1,4 @@
-from typing import Generator, Iterable, Iterator, List, Optional
+from typing import Generator, Iterable, Iterator, Optional
 
 
 def filter_by_currency(

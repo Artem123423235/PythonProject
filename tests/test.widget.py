@@ -1,12 +1,9 @@
 import pytest
 from copy import deepcopy
 
-import src.processing as processing
-from src.processing import filter_by_state, sort_by_date
+from src.processing import filter_by_state, sort_by_date  # noqa: F401  # импорт для побочного эффекта
 
-import pytest
-from datetime import datetime
-
+import src.widget as widget
 from src.widget import mask_account_card, get_date
 
 

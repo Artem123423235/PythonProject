@@ -1,7 +1,6 @@
 import pytest
 from copy import deepcopy
 
-import src.processing as processing
 from src.processing import filter_by_state, sort_by_date
 
 

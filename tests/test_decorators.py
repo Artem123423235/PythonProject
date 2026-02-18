@@ -1,9 +1,11 @@
 import pytest
 from decorators import log
 
+
 @log()
 def add(x: int, y: int) -> int:
     return x + y
+
 
 def test_add(capsys):
     result = add(1, 2)
@@ -15,6 +17,7 @@ def test_add(capsys):
 @log()
 def divide(x: int, y: int) -> float:
     return x / y
+
 
 def test_divide(capsys):
     result = divide(4, 2)

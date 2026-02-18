@@ -5,8 +5,7 @@ import types
 
 import pytest
 
-# Импортируем как пакет src.widget — pytest должен видеть пакет src (см. tests/conftest.py при необходимости)
-import src.widget as widget
+from src.processing import sort_by_date  # noqa: F401  # импорт сортировки
 from src.widget import mask_account_card, get_date
 
 
@@ -69,7 +68,7 @@ def _reload_widget_with_modules(modules: dict):
     """
     Помощник: временно вставить модули в sys.modules и перезагрузить src.widget.
     modules: mapping name -> module object
-    Возвращает: перезагруженный модуль
+    Возвращает: перезагруженный модуль и словарь сохранённых модулей
     """
     saved = {}
     for name, mod in modules.items():
@@ -78,7 +77,7 @@ def _reload_widget_with_modules(modules: dict):
     try:
         m = importlib.reload(importlib.import_module("src.widget"))
     finally:
-        # восстанавливать original sys.modules не будем здесь — тест сам очистит при необходимости
+        # Вызов _cleanup_modules должен восстановить sys.modules у вызывающего кода.
         pass
     return m, saved
 
@@ -87,7 +86,7 @@ def _cleanup_modules(saved):
     # saved: mapping name -> original module or None
     for name, orig in saved.items():
         if orig is None:
-            # модуль был добавлен — удаляем
+            # Модуль был добавлен — удаляем
             sys.modules.pop(name, None)
         else:
             sys.modules[name] = orig
