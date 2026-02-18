@@ -1,4 +1,3 @@
-import os
 import pathlib
 import pytest
 
@@ -10,15 +9,10 @@ def test_console_logging_success(capsys: pytest.CaptureFixture[str]) -> None:
     def add(x: int, y: int) -> int:
         return x + y
 
-    result = add(2, 3)
-    assert result == 5
-
+    assert add(2, 3) == 5
     captured = capsys.readouterr()
-    # Ожидаем, что в консоли присутствует сообщение о старте и сообщение об успешном завершении,
-    # причём успешное сообщение содержит "add ok"
     assert "add start" in captured.out
     assert "add ok" in captured.out
-    # опционально: результат должен быть в сообщении ok
     assert "5" in captured.out
 
 
@@ -32,10 +26,9 @@ def test_console_logging_error(capsys: pytest.CaptureFixture[str]) -> None:
 
     captured = capsys.readouterr()
     assert "fail_fn start" in captured.out
-    # Проверяем, что зафиксирована ошибка и входные параметры
-    assert "fail_fn error:" in captured.out
-    assert "(1, 2)" in captured.out
-    assert "{}" in captured.out  # пустые kwargs
+    assert "fail_fn error:" in captured.err
+    assert "(1, 2)" in captured.err
+    assert "{}" in captured.err
 
 
 def test_file_logging_success(tmp_path: pathlib.Path) -> None:
@@ -45,10 +38,7 @@ def test_file_logging_success(tmp_path: pathlib.Path) -> None:
     def greet(name: str) -> str:
         return f"Hello, {name}"
 
-    res = greet("Alice")
-    assert res == "Hello, Alice"
-
-    # Проверяем содержимое файла
+    assert greet("Alice") == "Hello, Alice"
     text = log_file.read_text(encoding="utf-8")
     assert "greet start" in text
     assert "greet ok" in text
@@ -63,27 +53,24 @@ def test_file_logging_error(tmp_path: pathlib.Path) -> None:
         raise RuntimeError("boom")
 
     with pytest.raises(RuntimeError):
-        explode(10, )
+        explode(10)
 
     text = log_file.read_text(encoding="utf-8")
     assert "explode start" in text
     assert "explode error:" in text
-    assert "(10,)" in text  # args tuple repr
-    assert "{}" in text  # kwargs repr
+    assert "(10,)" in text
+    assert "{}" in text
 
 
 def test_decorator_with_and_without_parentheses(tmp_path: pathlib.Path) -> None:
-    # @log without parentheses
     @log
     def f1() -> str:
         return "ok1"
 
-    # @log() with parentheses but without filename
     @log()
     def f2() -> str:
         return "ok2"
 
-    # @log with filename
     file_path = tmp_path / "both.txt"
 
     @log(filename=str(file_path))
@@ -94,7 +81,6 @@ def test_decorator_with_and_without_parentheses(tmp_path: pathlib.Path) -> None:
     assert f2() == "ok2"
     assert f3() == "ok3"
 
-    # проверяем, что файл exists and has the f3 entries
     content = file_path.read_text(encoding="utf-8")
     assert "f3 start" in content
     assert "f3 ok" in content

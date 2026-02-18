@@ -1,60 +1,67 @@
 from __future__ import annotations
 
 import functools
-from typing import Any, Callable, Optional, TypeVar
+import sys
+from typing import Callable, Optional, TypeVar
 from typing import ParamSpec
+
 
 P = ParamSpec("P")
 R = TypeVar("R")
 
 
-def _write_log(message: str, filename: Optional[str]) -> None:
-    """
-    Записывает сообщение либо в файл (если filename задан), либо в stdout (print).
-    """
-    if filename:
-        # Открываем каждый раз в режиме добавления, чтобы не сохранять состояние открытого файла
-        with open(filename, "a", encoding="utf-8") as f:
-            f.write(message + "\n")
+def _write_log_to_file(message: str, filename: str) -> None:
+    with open(filename, "a", encoding="utf-8") as f:
+        f.write(message + "\n")
+
+
+def _print_to_console(message: str, *, err: bool = False) -> None:
+    if err:
+        print(message, file=sys.stderr)
     else:
         print(message)
 
 
 def log(func: Optional[Callable[P, R]] = None, *, filename: Optional[str] = None) -> Callable[..., Callable[P, R]]:
     """
-    Декоратор, логирующий начало и конец выполнения функции, результат или ошибку.
-    Поддерживает использование как @log, так и @log(filename="...").
+    Декоратор логирует:
+      - "<func_name> start" (stdout)
+      - при успехе: "<func_name> ok: <repr(result)>" (stdout)
+      - при ошибке: "<func_name> error: <ExceptionType>. Inputs: <args_repr>, <kwargs_repr>"
+        — при filename==None печатает в stderr, иначе пишет в файл.
 
-    Формат логов:
-    - Старт: "<func_name> start"
-    - Успех: "<func_name> ok: <result_repr>"
-    - Ошибка: "<func_name> error: <error_repr>. Inputs: <args_repr>, <kwargs_repr>"
-
-    После логирования ошибка повторно возбуждается, чтобы поведение функции не изменялось.
+    Поддерживает @log, @log() и @log(filename="...").
     """
 
     def decorator(fn: Callable[P, R]) -> Callable[P, R]:
         @functools.wraps(fn)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            _write_log(f"{fn.__name__} start", filename)
+            start_msg = f"{fn.__name__} start"
+            if filename:
+                _write_log_to_file(start_msg, filename)
+            else:
+                _print_to_console(start_msg, err=False)
+
             try:
                 result = fn(*args, **kwargs)
-            except Exception as exc:  # noqa: BLE001 - намеренно ловим все исключения для логирования
-                _write_log(
-                    f"{fn.__name__} error: {exc}. Inputs: {args!r}, {kwargs!r}",
-                    filename,
-                )
-                # повторно возбуждаем исключение, чтобы поведение было предсказуемым
+            except Exception as exc:
+                exc_name = type(exc).__name__
+                err_msg = f"{fn.__name__} error: {exc_name}. Inputs: {args!r}, {kwargs!r}"
+                if filename:
+                    _write_log_to_file(err_msg, filename)
+                else:
+                    _print_to_console(err_msg, err=True)
                 raise
             else:
-                _write_log(f"{fn.__name__} ok: {result!r}", filename)
+                ok_msg = f"{fn.__name__} ok: {result!r}"
+                if filename:
+                    _write_log_to_file(ok_msg, filename)
+                else:
+                    _print_to_console(ok_msg, err=False)
                 return result
 
         return wrapper
 
-    # Поддержка использования как @log и как @log(...)
     if callable(func):
-        # Использование: @log
         return decorator(func)  # type: ignore[return-value]
-    # Использование: @log(...) — возвращаем сам декоратор
     return decorator  # type: ignore[return-value]
