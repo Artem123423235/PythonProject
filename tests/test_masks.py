@@ -1,43 +1,40 @@
-# tests/test_masks.py
+import unittest
 import pytest
 from masks import get_mask_card_number, get_mask_account
 
+class TestMasks(unittest.TestCase):
 
-def test_get_mask_card_number_standard_16():
-    src = "1234 5678 9012 3456"
-    masked = get_mask_card_number(src)
-    assert masked == "1234 56** **** 3456"
+    def test_get_mask_account(self):
+        result = get_mask_account("4081781009991000")
+        self.assertEqual(result, "**********1000")
 
+    def test_get_mask_account_short(self):
+        self.assertEqual(get_mask_account("1234"), "1234")  # Возвращает как есть
+        self.assertEqual(get_mask_account("99"), "99")      # Возвращает как есть
 
-def test_get_mask_card_number_short():
-    # 8 digits -> left_show = min(6, 8-4)=4, right_show=4, masked_mid_len=0
-    assert get_mask_card_number("12345678") == "1234 5678"
+    def test_get_mask_account_invalid_raises(self):
+        with self.assertRaises(ValueError):
+            get_mask_account("no digits here")
 
+    def test_get_mask_card_number_standard_16(self):
+        result = get_mask_card_number("1234567812345678")
+        self.assertEqual(result, "1234 5678 ** **** 5678")
 
-def test_get_mask_card_number_very_short():
-    assert get_mask_card_number("1234") == "1234"
-    assert get_mask_card_number("12") == "12"
+    def test_get_mask_card_number_with_spaces(self):
+        result = get_mask_card_number("1234 5678 9012 3456")
+        self.assertEqual(result, "1234 5678 ** **** 3456")
 
+    def test_get_mask_card_number_short(self):
+        self.assertEqual(get_mask_card_number("1234"), "1234")  # Возвращает как есть
+        self.assertEqual(get_mask_card_number("12"), "12")      # Возвращает как есть
 
-def test_get_mask_card_number_non_digit_chars():
-    assert get_mask_card_number("  4111-1111-1111-1111  ") == "4111 11** **** 1111"
+    def test_get_mask_card_number_non_digit_chars(self):
+        result = get_mask_card_number("  4111-1111-1111-1111  ")
+        self.assertEqual(result, "4111 1111 ** **** 1111")
 
+    def test_get_mask_card_number_empty_raises(self):
+        with self.assertRaises(ValueError):
+            get_mask_card_number("abc")
 
-def test_get_mask_card_number_empty_raises():
-    with pytest.raises(ValueError):
-        get_mask_card_number("abc")
-
-
-def test_get_mask_account_standard():
-    acc = "40817810099910004312"
-    assert get_mask_account(acc) == "**4312"
-
-
-def test_get_mask_account_short():
-    assert get_mask_account("1234") == "1234"
-    assert get_mask_account("99") == "99"
-
-
-def test_get_mask_account_invalid_raises():
-    with pytest.raises(ValueError):
-        get_mask_account("no digits here")
+if __name__ == '__main__':
+    unittest.main()

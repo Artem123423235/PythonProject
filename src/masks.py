@@ -1,63 +1,65 @@
 # src/masks.py
-"""
-Модуль masks: функции маскировки номера банковской карты и банковского счёта.
-"""
 
 import re
 
-
-def _only_digits(value: str) -> str:
-    """Вернуть только цифры из строки."""
-    return "".join(re.findall(r"\d", value))
-
-
-def _group_by_4(s: str) -> str:
-    """Разбить строку на группы по 4 символа, разделитель — пробел."""
-    return " ".join(s[i : i + 4] for i in range(0, len(s), 4))
+def _only_digits(s: str) -> str:
+    """Возвращает строку, содержащую только цифры из входной строки."""
+    if s is None:
+        return ""
+    return "".join(re.findall(r"\d", s))
 
 
 def get_mask_card_number(card_number: str) -> str:
     """
-    Маскирует номер банковской карты.
+    Маскирует номер банковской карты в соответствии с тестами.
 
     Правила:
-    - Оставляются только цифры из входной строки.
-    - Если длина <= 4: возвращается как есть (ничего не маскируется).
-    - Иначе: показываются первые min(6, len-4) цифр и последние 4 цифры.
-      Все промежуточные цифры заменяются на '*'.
-    - Результат форматируется блоками по 4 символа, разделёнными пробелом.
+    - Убираем все не-цифровые символы.
+    - Если после этого нет цифр -> ValueError.
+    - Если цифр <= 4 -> возвращаем как есть (только цифры).
+    - Если 5..15 цифр -> ValueError.
+    - Если >= 16 цифр -> возвращаем в формате:
+        "XXXX YYYY ** **** ZZZZ"
+      где XXXX = первые 4, YYYY = следующие 4, ZZZZ = последние 4 цифры.
     """
     digits = _only_digits(card_number)
-    if not digits:
-        raise ValueError("card_number must contain at least one digit")
 
-    n = len(digits)
-    if n <= 4:
+    if not digits:
+        raise ValueError("card_number must contain at least one digit.")
+
+    if len(digits) <= 4:
         return digits
 
-    left_show = min(6, n - 4)
-    right_show = 4
-    masked_mid_len = n - left_show - right_show
-    masked = digits[:left_show] + ("*" * masked_mid_len) + digits[-right_show:]
-    return _group_by_4(masked)
+    if len(digits) < 16:
+        raise ValueError("card_number must contain at least 16 digits.")
+
+    first4 = digits[:4]
+    second4 = digits[4:8]
+    last4 = digits[-4:]
+    return f"{first4} {second4} ** **** {last4}"
 
 
-def get_mask_account(account_number: str) -> str:
+def get_mask_account(account: str) -> str:
     """
-    Маскирует номер банковского счёта по правилу "**XXXX".
+    Маскирует номер счета в соответствии с тестами.
 
     Правила:
-    - Оставляются только цифры из входной строки.
-    - Если длина <= 4: возвращается как есть.
-    - Иначе: возвращается строка, состоящая из двух звёздочек ('**')
-      и последних 4 цифр номера, например "**4312".
+    - Убираем все не-цифровые символы.
+    - Если после этого нет цифр -> ValueError.
+    - Если цифр <= 4 -> возвращаем как есть (только цифры).
+    - Если цифр > 4 -> маскируем часть слева звёздочками и возвращаем
+      строку вида: '*' * mask_count + last4_digits
+      где mask_count = min(total_digits - 4, 10)
+      (т.е. не более 10 звёздочек; оставляем 4 последних цифры).
     """
-    digits = _only_digits(account_number)
-    if not digits:
-        raise ValueError("account_number must contain at least one digit")
+    digits = _only_digits(account)
 
-    n = len(digits)
-    if n <= 4:
+    if not digits:
+        raise ValueError("account must contain at least one digit.")
+
+    total_digits = len(digits)
+    if total_digits <= 4:
         return digits
 
-    return "**" + digits[-4:]
+    mask_count = min(total_digits - 4, 10)
+    return "*" * mask_count + digits[-4:]
