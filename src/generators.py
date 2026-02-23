@@ -1,85 +1,114 @@
-from typing import Generator, Iterable, Iterator, Optional
+from typing import Iterable, Iterator, Optional
+
+MAX_CARD = 10**16 - 1
 
 
-def filter_by_currency(
-    transactions: Optional[Iterable[dict]], currency_code: str
-) -> Iterator[dict]:
+def filter_by_currency(txs: Optional[Iterable], currency_code) -> Iterator[dict]:
     """
-    Генератор: поочередно возвращает транзакции, у которых
-    operationAmount.currency.code == currency_code.
-
-    Устойчив к отсутствующим полям: пропускает некорректные записи.
+    Итератор по транзакциям, у которых operationAmount.currency.code == currency_code.
+    Пропускает не-dict элементы, записи без operationAmount/currency/code или с code is None.
+    currency_code приводится к str и сравнивается в верхнем регистре.
     """
-    if not transactions:
+    if not txs:
         return
-        yield  # pragma: no cover
+        yield  # чтобы функция была генератором (ничего не отдаёт)
 
-    code = str(currency_code)
-    for tx in transactions:
-        if not isinstance(tx, dict):
+    target = str(currency_code).upper()
+
+    for t in txs:
+        if not isinstance(t, dict):
             continue
-        op_amount = tx.get("operationAmount")
-        if not isinstance(op_amount, dict):
+        op = t.get("operationAmount")
+        if not isinstance(op, dict):
             continue
-        currency = op_amount.get("currency")
-        if not isinstance(currency, dict):
+        cur = op.get("currency")
+        if not isinstance(cur, dict):
             continue
-        tx_code = currency.get("code")
-        if tx_code == code:
-            yield tx
+        code = cur.get("code")
+        if code is None:
+            continue
+        # нормализуем код (например, 840 -> "840")
+        try:
+            code_str = str(code).upper()
+        except Exception:
+            continue
+        if code_str == target:
+            yield t
 
 
-def transaction_descriptions(transactions: Optional[Iterable[dict]]) -> Iterator[str]:
+def transaction_descriptions(txs: Optional[Iterable]) -> Iterator[str]:
     """
-    Генератор: поочередно возвращает поле 'description' для каждой транзакции.
-    Если описание отсутствует — возвращает пустую строку.
+    Итератор строк описаний транзакций.
+    Для некорректных записей/отсутствия description/None возвращает пустую строку "".
     """
-    if not transactions:
+    if not txs:
         return
-        yield  # pragma: no cover
+        yield
 
-    for tx in transactions:
-        if not isinstance(tx, dict):
+    for t in txs:
+        if not isinstance(t, dict):
             yield ""
             continue
-        desc = tx.get("description")
-        yield desc if desc is not None else ""
+        desc = t.get("description", "")
+        if isinstance(desc, str):
+            yield desc
+        else:
+            yield ""
 
 
-def _format_card_number(n: int) -> str:
-    """Форматирует целое число в 'XXXX XXXX XXXX XXXX' с ведущими нулями."""
-    s = f"{n:016d}"
-    return " ".join(s[i : i + 4] for i in range(0, 16, 4))
-
-
-def card_number_generator(start: int, end: int) -> Generator[str, None, None]:
+def _format_card_number(n) -> str:
     """
-    Генератор номеров карт (включительно): от start до end.
-    Формат: '0000 0000 0000 0001' ... '9999 9999 9999 9999'.
+    Форматирует число в 16-значный номер карты, группируя по 4 цифры через пробел.
+    Пример: 1 -> "0000 0000 0000 0001"
+             1234567890123456 -> "1234 5678 9012 3456"
+    """
+    try:
+        i = int(n)
+    except Exception:
+        raise TypeError("_format_card_number expects an integer-convertible input")
+    if i < 0:
+        raise ValueError("Card number must be non-negative")
+    # Формируем 16-значную строку с ведущими нулями
+    s = f"{i:016d}"
+    groups = [s[i:i+4] for i in range(0, 16, 4)]
+    return " ".join(groups)
 
-    Поведение:
-    - Если start > end — генерация завершится без выдачи значений.
-    - Значения меньше 1 будут приведены к 1; значения больше максимума (10**16-1)
-      ограничены максимумом.
+
+def card_number_generator(start, end) -> Iterator[str]:
+    """
+    Генератор форматированных номеров карт от start до end включительно.
+    Правила:
+    - Если start or end is None -> пусто.
+    - Нецелые/float приводятся через int(); нечисловые строки -> пусто.
+    - start < 1 приводится к 1.
+    - Если start > end -> пусто.
+    - Обрезает end по MAX_CARD (10**16 - 1).
     """
     if start is None or end is None:
         return
-        yield  # pragma: no cover
+        yield
 
     try:
         s = int(start)
         e = int(end)
-    except (TypeError, ValueError):
+    except Exception:
+        # нечисловые строки и т.п. -> ничего не генерируем
         return
-        yield  # pragma: no cover
+        yield
 
-    MAX_CARD = 10**16 - 1
     if s < 1:
         s = 1
-    if e > MAX_CARD:
-        e = MAX_CARD
+
     if s > e:
         return
+        yield
 
-    for n in range(s, e + 1):
-        yield _format_card_number(n)
+    if s > MAX_CARD:
+        return
+        yield
+
+    if e > MAX_CARD:
+        e = MAX_CARD
+
+    for i in range(s, e + 1):
+        yield _format_card_number(i)
