@@ -1,4 +1,18 @@
 import re
+from decorators.log import setup_logger
+
+logger = setup_logger('masks')
+
+
+def example_function():
+    try:
+        logger.info("Функция example_function запущена.")
+
+        # Логика функции...
+
+        logger.info("Функция example_function успешно завершена.")
+    except Exception as e:
+        logger.error(f"Ошибка в функции example_function: {e}")
 
 def _only_digits(s: str) -> str:
     if s is None:

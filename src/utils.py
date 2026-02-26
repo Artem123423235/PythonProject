@@ -1,5 +1,19 @@
 import json
 import os
+from decorators.log import setup_logger
+
+logger = setup_logger('utils')
+
+
+def utils_function():
+    try:
+        logger.info("Функция utils_function запущена.")
+
+        # Логика функции...
+
+        logger.info("Функция utils_function успешно завершена.")
+    except Exception as e:
+        logger.error(f"Ошибка в функции utils_function: {e}")
 
 def load_transactions(file_path):
     """

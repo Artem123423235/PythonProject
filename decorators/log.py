@@ -4,7 +4,29 @@ import functools
 import sys
 from typing import Callable, Optional, TypeVar
 from typing import ParamSpec
+import logging
+import os
 
+
+def setup_logger(module_name):
+    """Настраивает логгер для указанного модуля."""
+
+    # Создаем папку logs, если она не существует
+    logs_path = os.path.join(os.path.dirname(__file__), '..', 'logs')
+    if not os.path.exists(logs_path):
+        os.makedirs(logs_path)
+
+    # Настройка формата логирования
+    log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logging.basicConfig(
+        filename=os.path.join(logs_path, f'{module_name}.log'),  # Путь к файлу лога
+        filemode='w',  # Перезапись файла при каждом запуске
+        format=log_format,
+        level=logging.DEBUG  # Уровень логирования
+    )
+
+    logger = logging.getLogger(module_name)
+    return logger
 
 P = ParamSpec("P")
 R = TypeVar("R")
