@@ -28,6 +28,7 @@ def setup_logger(module_name):
     logger = logging.getLogger(module_name)
     return logger
 
+
 P = ParamSpec("P")
 R = TypeVar("R")
 

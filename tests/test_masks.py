@@ -1,6 +1,6 @@
 import unittest
-import pytest
 from masks import get_mask_card_number, get_mask_account
+
 
 class TestMasks(unittest.TestCase):
 
@@ -35,6 +35,7 @@ class TestMasks(unittest.TestCase):
     def test_get_mask_card_number_empty_raises(self):
         with self.assertRaises(ValueError):
             get_mask_card_number("abc")
+
 
 if __name__ == '__main__':
     unittest.main()

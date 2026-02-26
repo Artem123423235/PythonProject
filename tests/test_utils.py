@@ -1,19 +1,16 @@
-import unittest
-from unittest.mock import patch, mock_open
-from src.utils import load_transactions
 import sys
 import os
 import unittest
 from unittest.mock import patch, mock_open
+from utils import load_transactions  # Импортируем модуль после добавления пути
+
 
 # Добавляем src к пути Python
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
-from utils import load_transactions  # Импортируем модуль после добавления пути
 
 class TestUtils(unittest.TestCase):
     # Ваши тесты здесь
-
 
     @patch("builtins.open", new_callable=mock_open, read_data='[{"amount": 100, "currency": "USD"}]')
     def test_load_transactions_valid(self, mock_file):

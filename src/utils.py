@@ -1,5 +1,4 @@
 import json
-import os
 from decorators.log import setup_logger
 
 logger = setup_logger('utils')
