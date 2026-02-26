@@ -14,6 +14,7 @@ def example_function():
     except Exception as e:
         logger.error(f"Ошибка в функции example_function: {e}")
 
+
 def _only_digits(s: str) -> str:
     if s is None:
         return ""

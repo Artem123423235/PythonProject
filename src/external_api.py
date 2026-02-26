@@ -3,6 +3,7 @@ from decorators.log import setup_logger
 
 logger = setup_logger('external_api')
 
+
 def main():
     logger.info("Запуск приложения.")
 
@@ -12,8 +13,10 @@ def main():
     except Exception as e:
         logger.error(f"Произошла ошибка: {e}")
 
+
 if __name__ == "__main__":
     main()
+
 
 def get_currency_rate(currency_code):
     """Получает курс валюты по отношению к рублю."""
@@ -28,6 +31,7 @@ def get_currency_rate(currency_code):
             raise ValueError("Курс для RUB не найден.")
     else:
         raise ValueError("Не удалось получить курс валюты.")
+
 
 def convert_to_rub(transaction):
     """

@@ -15,6 +15,7 @@ def utils_function():
     except Exception as e:
         logger.error(f"Ошибка в функции utils_function: {e}")
 
+
 def load_transactions(file_path):
     """
     Читает JSON-файл и возвращает список транзакций.
