@@ -1,4 +1,21 @@
 from PythonProject.decorators import log
+import pandas as pd
+
+# Считываем данные из CSV-файла
+csv_file_path = 'transactions.csv'  # Укажите путь к CSV файлу
+transactions_csv = pd.read_csv(csv_file_path)  # Считываем CSV данные
+
+# Выводим первые 5 строк для проверки
+print("Данные из CSV:")
+print(transactions_csv.head())
+
+# Считываем данные из XLSX-файла
+xlsx_file_path = 'transactions_excel.xlsx'  # Укажите путь к XLSX файлу
+transactions_xlsx = pd.read_excel(xlsx_file_path)  # Считываем XLSX данные
+
+# Выводим первые 5 строк для проверки
+print("Данные из XLSX:")
+print(transactions_xlsx.head())
 
 
 @log(filename="mylog.txt")
