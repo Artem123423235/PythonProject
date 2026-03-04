@@ -1,0 +1,18 @@
+[
+    {
+        "date": "08.12.2019",
+        "description": "Открытие вклада",
+        "account": "Счет **4321",
+        "amount": 40542,
+        "currency": "RUB",
+        "state": "EXECUTED"
+    },
+    {
+        "date": "12.11.2019",
+        "description": "Перевод с карты на карту",
+        "account": "MasterCard 7771 27** **** 3727 -> Visa Platinum 1293 38** **** 9203",
+        "amount": 130,
+        "currency": "USD",
+        "state": "EXECUTED"
+    }
+]
