@@ -1,53 +1,7 @@
-from decorators import log  # Предполагается, что декораторы находятся в decorators.py
-# Импорт функций
-import pandas as pd
+import os
+import json
 from data_loader import load_csv_transactions, load_excel_transactions  # Импорт функций
 from search import process_bank_search, process_bank_operations  # Импорт новых функций
-import json
-
-# Считываем данные из CSV-файла
-csv_file_path = 'transactions.csv'  # Укажите путь к CSV файлу
-transactions_csv = load_csv_transactions(csv_file_path)  # Загружаем CSV данные
-
-# Выводим первые 5 строк для проверки
-print("Данные из CSV:")
-print(transactions_csv[:5])  # Вывод первых 5 строк как список словарей
-
-# Считываем данные из XLSX-файла
-xlsx_file_path = 'transactions_excel.xlsx'  # Укажите путь к XLSX файлу
-transactions_xlsx = load_excel_transactions(xlsx_file_path)  # Загружаем XLSX данные
-
-# Выводим первые 5 строк для проверки
-print("Данные из XLSX:")
-print(transactions_xlsx[:5])  # Вывод первых 5 строк как список словарей
-
-
-@log(filename="mylog.txt")
-def my_function(x: int, y: int) -> int:
-    return x + y
-
-
-my_function(1, 2)
-
-
-@log()
-def my_function_with_error(x: int, y: int) -> int:
-    return x / y
-
-
-try:
-    my_function_with_error(1, 0)
-except ZeroDivisionError:
-    pass
-
-
-def print_hi(name):
-    print(f'Hi, {name}')
-
-
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
 
 def main():
     print("Привет! Добро пожаловать в программу работы с банковскими транзакциями.")
@@ -58,15 +12,29 @@ def main():
 
     choice = input("Ваш выбор: ")
 
+    data = []  # Инициализируем переменную для хранения данных
+
     if choice == "1":
-        with open('transactions.json', 'r', encoding='utf-8') as f:
-            data = json.load(f)
+        if os.path.exists('transactions.json'):
+            with open('transactions.json', 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        else:
+            print("JSON файл 'transactions.json' не найден.")
+            return
     elif choice == "2":
-        file_path = 'transactions.csv'
-        data = load_csv_transactions(file_path)
+        if os.path.exists('transactions.csv'):
+            file_path = 'transactions.csv'
+            data = load_csv_transactions(file_path)
+        else:
+            print("CSV файл 'transactions.csv' не найден.")
+            return
     elif choice == "3":
-        file_path = 'transactions_excel.xlsx'
-        data = load_excel_transactions(file_path)
+        if os.path.exists('transactions_excel.xlsx'):
+            file_path = 'transactions_excel.xlsx'
+            data = load_excel_transactions(file_path)
+        else:
+            print("XLSX файл 'transactions_excel.xlsx' не найден.")
+            return
     else:
         print("Неверный выбор.")
         return
@@ -112,7 +80,6 @@ def main():
         print(f"Счет: {transaction.get('account')}")
         print(f"Сумма: {transaction.get('amount')} {transaction.get('currency')}")
         print()  # Для разделения
-
 
 if __name__ == '__main__':
     main()
