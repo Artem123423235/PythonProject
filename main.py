@@ -1,6 +1,7 @@
 import os
 import json
-from data_loader import load_csv_transactions, load_excel_transactions, load_transactions  # Импорт функций
+from data_loader import load_csv_transactions, load_excel_transactions  # Импорт функций
+from src.masks import load_transactions  # Импортируем правильно из src.masks
 from search import process_bank_search, process_bank_operations  # Импорт новых функций
 
 
@@ -40,21 +41,25 @@ def main():
     data = []  # Инициализируем переменную для хранения данных
 
     if choice == "1":
-        # Используем функцию для загрузки данных из JSON
-        data = load_transactions()  # Используем функцию, которая загружает данные из JSON
-    elif choice == "2":
-        if os.path.exists('transactions.csv'):
-            file_path = 'transactions.csv'
-            data = load_csv_transactions(file_path)
+        json_file_path = 'transactions.json'  # Указываем путь к JSON файлу
+        if os.path.exists(json_file_path):
+            data = load_transactions(json_file_path)  # Используем функцию, которая загружает данные из JSON
         else:
-            print("CSV файл 'transactions.csv' не найден.")
+            print(f"JSON файл '{json_file_path}' не найден.")
+            return
+    elif choice == "2":
+        csv_file_path = 'transactions.csv'  # Указываем путь к файлу CSV
+        if os.path.exists(csv_file_path):
+            data = load_csv_transactions(csv_file_path)
+        else:
+            print(f"CSV файл '{csv_file_path}' не найден.")
             return
     elif choice == "3":
-        if os.path.exists('transactions_excel.xlsx'):
-            file_path = 'transactions_excel.xlsx'
-            data = load_excel_transactions(file_path)
+        xlsx_file_path = 'transactions_excel.xlsx'  # Указываем путь к файлу XLSX
+        if os.path.exists(xlsx_file_path):
+            data = load_excel_transactions(xlsx_file_path)
         else:
-            print("XLSX файл 'transactions_excel.xlsx' не найден.")
+            print(f"XLSX файл '{xlsx_file_path}' не найден.")
             return
     else:
         print("Неверный выбор.")
@@ -66,13 +71,13 @@ def main():
 
     while status not in valid_statuses:
         print(f'Статус операции "{status}" недоступен.')
-        status = input(
+        state = input(
             "Введите статус, по которому необходимо выполнить фильтрацию (EXECUTED, CANCELED, PENDING): ").strip().upper()
 
     print(f'Операции отфильтрованы по статусу "{status}".')
 
     # Фильтрация по статусу, для JSON необходимо проверить на соответствие 'state'
-    filtered_data = [transaction for transaction in data if transaction.get('state', '').upper() == status]
+    filtered_data = [transaction for transaction in data if str(transaction.get('state', '')).upper() == status]
 
     if not filtered_data:
         print("Не найдено ни одной транзакции, подходящей под ваши условия фильтрации.")
